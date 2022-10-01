@@ -60,17 +60,27 @@ html, body {
   position: fixed;
   top: 0;
   left: 0;
-  display: none;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  visibility: collapse;
   height: 100%;
   width: 100%;
   margin: auto;
-  text-align: center;
   color: white;
   font-size: 100px;
-  background-color: black;
-  opacity: 0.5;
+  background-color: rgba(0, 0, 0, 0);
+  opacity: 0;
 }
 
 .overlay.active {
-  display: block;
+  visibility: visible;
+  transform: scale(1.1);
+  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.4);
+  opacity: 1;
+}
+
+.overlay.smooth {
+  transition: all 2s ease;
 }
