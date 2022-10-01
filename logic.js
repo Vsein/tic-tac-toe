@@ -3,7 +3,7 @@ const Gameboard = (() => {
 
   let state = Array.from(Array(size), () => new Array(size))
 
-  const reset = () => {
+  const restart = () => {
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
         state[i][j] = null;
@@ -50,7 +50,7 @@ const Gameboard = (() => {
     state[row][column] = side;
   };
 
-  return { fillCell, reset, checkForAWin };
+  return { fillCell, restart, checkForAWin };
 })();
 
 const Game = (() => {
@@ -62,12 +62,20 @@ const Game = (() => {
     Gameboard.fillCell(row, column, side);
     curRound++;
     if (Gameboard.checkForAWin(row, column, side)) {
-      return side;
+      return `${side} won!`;
+    }
+    if (curRound === 10) {
+      return "It's a draw!";
     }
     return null;
   };
 
-  return { play, getState };
+  const restart = () => {
+    curRound = 1;
+    Gameboard.restart();
+  };
+
+  return { play, restart, getState };
 })();
 
 const displayController = (() => {
@@ -77,6 +85,7 @@ const displayController = (() => {
   let row = Array(size);
 
   const overlay = document.querySelector('.overlay');
+  const overlayText = document.querySelector('.overlay-text');
 
   function modifyCell(e) {
     if (!this.firstChild) {
@@ -93,9 +102,9 @@ const displayController = (() => {
 
       let result = Game.play(row, column);
       if (result) {
-        overlay.textContent = `${result} WON!`;
+        overlayText.textContent = result;
         overlay.classList.add('active');
-        overlay.classList.remove('active');
+        overlay.classList.add('smooth');
       }
     }
   };
@@ -117,16 +126,27 @@ const displayController = (() => {
     }
   })();
 
-  const congratulation = () => {
+  const _clean = () => {
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        cell[i][j].textContent = '';
+      }
+    }
   };
-  const reset = () => {
-  };
-  const restrictCell = () => {
-  };
-  const getChoice = () => {
-  };
-  const notifyPlayer = () => {
-  };
+
+  const _restart = (() => {
+    overlay.addEventListener('click', () => {
+      overlay.classList.remove('active');
+      _clean();
+      Game.restart();
+    });
+    overlay.addEventListener('dblclick', () => {
+      overlay.classList.remove('smooth');
+      overlay.classList.remove('active');
+      _clean();
+      Game.restart();
+    });
+  })();
 })();
 
 const Player = (name, side) => {
@@ -134,6 +154,5 @@ const Player = (name, side) => {
   const getName = () => name;
   const getChoice = () => {
     console.log(`It's your turn, ${name}`);
-
   }
 }
