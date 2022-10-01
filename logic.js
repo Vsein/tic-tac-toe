@@ -55,7 +55,13 @@ const Gameboard = (() => {
 
 const Game = (() => {
   let curRound = 1;
-  const getState = () => (curRound % 2 ? 'X' : 'O');
+  let firstPlayerSide = 'X';
+  let secondPlayerSide = 'O';
+  const getState = () => (curRound % 2 ? firstPlayerSide : secondPlayerSide);
+
+  const switchSides = () => {
+    [firstPlayerSide, secondPlayerSide] = [secondPlayerSide, firstPlayerSide];
+  };
 
   const play = (row, column) => {
     let side = getState();
@@ -75,7 +81,7 @@ const Game = (() => {
     Gameboard.restart();
   };
 
-  return { play, restart, getState };
+  return { play, restart, getState, switchSides };
 })();
 
 const displayController = (() => {
@@ -146,6 +152,16 @@ const displayController = (() => {
       _clean();
       Game.restart();
     });
+  })();
+
+  const _newSide = (() => {
+    const btns = Array.from(document.querySelectorAll('.btn'));
+    btns.forEach(btn => btn.addEventListener('click', function (e) {
+      if (!this.classList.contains('active')) {
+        btns.forEach(btn => btn.classList.toggle('active'));
+        Game.switchSides();
+      }
+    }));
   })();
 })();
 
