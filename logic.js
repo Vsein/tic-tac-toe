@@ -150,6 +150,7 @@ const displayController = (() => {
 
   const overlay = document.querySelector('.overlay');
   const overlayText = document.querySelector('.overlay-text');
+  const reset = document.querySelector('.reset');
 
   const modifyGivenCell = (row, column, side) => {
     var img = document.createElement('img');
@@ -211,6 +212,10 @@ const displayController = (() => {
     overlay.addEventListener('dblclick', () => {
       overlay.classList.remove('smooth');
       overlay.classList.remove('active');
+      _clean();
+      Game.restart();
+    });
+    reset.addEventListener('click', () => {
       _clean();
       Game.restart();
     });

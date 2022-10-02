@@ -33,19 +33,18 @@ body {
   box-shadow: -1px 7px 22px -6px lightgrey;
 }
 
-.menu {
+.menu, .reset {
   width: 100%;
-  border-bottom: 1px solid grey;
   background-color: white;
-}
-
-.menu, .menu h1, .menu h2 {
-  padding: 0;
-  margin: 0;
 }
 
 .menu h1 {
   border-bottom: 1px solid grey;
+}
+
+.menu, .menu h1, .menu h2, .reset h1 {
+  padding: 0;
+  margin: 0;
 }
 
 .players {
@@ -81,6 +80,7 @@ body {
 
 
 .gameboard {
+  border-block: 1px solid grey;
   height: min(400px, 100vw);
   width: 100%;
   display: grid;
@@ -108,7 +108,7 @@ body {
   outline: none;
 }
 
-.cell:hover {
+.cell:hover, .reset:hover, .btn:hover {
   cursor: pointer;
 }
 
