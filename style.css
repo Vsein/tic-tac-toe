@@ -63,7 +63,6 @@ body {
 .btns {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 40px;
   gap: 10px;
   padding-bottom: 10px;
 }
@@ -71,6 +70,8 @@ body {
 .btns img {
   border: 3px solid lightgrey;
   border-radius: 5px;
+  height: 40px;
+  width: 40px;
 }
 
 .btns img.active {
