@@ -79,20 +79,28 @@ const Gameboard = (() => {
 
   const makeBestChoice = (side, depth) => {
     let best = -Infinity;
-    let move = { i: -1, j: -1 };
+    let moves = { i: -1, j: -1 };
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
         if (!board[i][j]) {
           board[i][j] = side;
           let score = minimax(i, j, depth + 1, getOpponent(side), side);
+          if (checkForAWin(i, j, side)) {
+            score = Infinity;
+          }
           board[i][j] = null;
-          if (score >= best) {
+          if (score > best) {
             best = score;
-            move = { i, j };
+            moves = [ { i, j } ];
+          } else if (score == best) {
+            best = score
+            moves.push({ i, j });
           }
         }
       }
     }
+    let rndIndex = Math.floor(Math.random() * moves.length);
+    let move = moves[rndIndex];
     board[move.i][move.j] = side;
     displayController.modifyGivenCell(move.i, move.j, side);
     return checkForAWin(move.i, move.j, side);
@@ -105,41 +113,90 @@ const Gameboard = (() => {
   return { fillCell, restart, checkForAWin, makeBestChoice, getOpponent };
 })();
 
+const Player = (side, isAI) => {
+  let _side = side;
+  let opponent = (side == 'X' ? 'O' : 'X');
+  function changeSide() {
+    [this.side, this.opponent] = [this.opponent, this.side];
+  };
+  function toggleAI() {
+    this.isAI ^= 1;
+  };
+  return { side, opponent, isAI, changeSide, toggleAI }
+}
+
 const Game = (() => {
   let curRound = 1;
-  let firstPlayerSide = 'X';
-  let secondPlayerSide = 'O';
-  const getRound = () => curRound;
-  const getState = () => (curRound % 2 ? firstPlayerSide : secondPlayerSide);
+  const players = [
+    Player('X', 0),
+    Player('O', 1)
+  ];
+  const getState = () => players[(curRound + 1) % 2].side;
+  const isAIvsAI = () => (players[0].isAI & players[1].isAI == 1);
+  const isAIplaying = () => (players[0].isAI | players[1].isAI == 1);
 
   const switchSides = () => {
-    [firstPlayerSide, secondPlayerSide] = [secondPlayerSide, firstPlayerSide];
+    players[0].changeSide();
+    players[1].changeSide();
+    restart();
   };
 
-  const play = (row, column) => {
+  const switchMode = (playerIndex) => {
+    players[playerIndex].toggleAI();
+    restart();
+  };
+
+  const makeAIMove = () => {
     let side = getState();
-    let opponent = Gameboard.getOpponent(side);
-    Gameboard.fillCell(row, column, side);
-    curRound++;
-    if (Gameboard.checkForAWin(row, column, side)) {
+    if (Gameboard.makeBestChoice(side, curRound)) {
       return `${side} won!`;
     }
+    curRound++;
     if (curRound >= 10) {
       return "It's a draw!";
     }
-    if (Gameboard.makeBestChoice(opponent, curRound)) {
-      return `${opponent} won!`;
+    return null;
+  };
+
+  const registerPlayerMove = (row, column) => {
+    let side = getState();
+    Gameboard.fillCell(row, column, side);
+    if (Gameboard.checkForAWin(row, column, side)) {
+      return `${side} won!`;
     }
     curRound++;
+    if (curRound >= 10) {
+      return "It's a draw!";
+    }
+    if (isAIplaying()) {
+      return makeAIMove();
+    }
     return null;
+  };
+
+  const simulateAIvsAI = () => {
+    while (curRound < 10) {
+      if (Gameboard.makeBestChoice(getState(), curRound)) {
+        return `${getState()} won!`;
+      }
+      curRound++;
+    }
+    return "It's a draw!";
   };
 
   const restart = () => {
     curRound = 1;
+    displayController.restart();
     Gameboard.restart();
+    if (isAIvsAI()) {
+      simulateAIvsAI();
+    } else if (players[0].isAI) {
+      Gameboard.makeBestChoice(getState(), curRound);
+      curRound++;
+    }
   };
 
-  return { play, restart, getState, getRound, switchSides };
+  return { registerPlayerMove, restart, getState, switchSides, switchMode };
 })();
 
 const displayController = (() => {
@@ -169,7 +226,7 @@ const displayController = (() => {
 
       modifyGivenCell(row, column, Game.getState());
 
-      let result = Game.play(row, column);
+      let result = Game.registerPlayerMove(row, column);
       if (result) {
         overlayText.textContent = result;
         overlay.classList.add('active');
@@ -195,7 +252,7 @@ const displayController = (() => {
     }
   })();
 
-  const _clean = () => {
+  const restart = () => {
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
         cell[i][j].textContent = '';
@@ -203,20 +260,17 @@ const displayController = (() => {
     }
   };
 
-  const _restart = (() => {
+  const _restartControls = (() => {
     overlay.addEventListener('click', () => {
       overlay.classList.remove('active');
-      _clean();
       Game.restart();
     });
     overlay.addEventListener('dblclick', () => {
       overlay.classList.remove('smooth');
       overlay.classList.remove('active');
-      _clean();
       Game.restart();
     });
     reset.addEventListener('click', () => {
-      _clean();
       Game.restart();
     });
   })();
@@ -230,13 +284,14 @@ const displayController = (() => {
       }
     }));
   })();
-  return { modifyGivenCell };
-})();
 
-const Player = (name, side) => {
-  const getSide = () => side;
-  const getName = () => name;
-  const getChoice = () => {
-    console.log(`It's your turn, ${name}`);
-  }
-}
+  const _getMode = (() => {
+    const AIbtns = Array.from(document.querySelectorAll('.AI'));
+    AIbtns.forEach(btn => btn.addEventListener('click', function (e) {
+      this.classList.toggle('active');
+      const playerNumber = this.getAttribute('data-num');
+      Game.switchMode(playerNumber);
+    }));
+  })();
+  return { modifyGivenCell, restart };
+})();
