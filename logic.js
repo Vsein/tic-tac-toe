@@ -265,11 +265,6 @@ const displayController = (() => {
       overlay.classList.remove('active');
       Game.restart();
     });
-    overlay.addEventListener('dblclick', () => {
-      overlay.classList.remove('smooth');
-      overlay.classList.remove('active');
-      Game.restart();
-    });
     reset.addEventListener('click', () => {
       Game.restart();
     });
