@@ -114,7 +114,6 @@ const Gameboard = (() => {
 })();
 
 const Player = (side, isAI) => {
-  let _side = side;
   let opponent = (side == 'X' ? 'O' : 'X');
   function changeSide() {
     [this.side, this.opponent] = [this.opponent, this.side];
@@ -141,7 +140,7 @@ const Game = (() => {
     restart();
   };
 
-  const switchMode = (playerIndex) => {
+  const switchAIMode = (playerIndex) => {
     players[playerIndex].toggleAI();
     restart();
   };
@@ -196,7 +195,7 @@ const Game = (() => {
     }
   };
 
-  return { registerPlayerMove, restart, getState, switchSides, switchMode };
+  return { registerPlayerMove, restart, getState, switchSides, switchAIMode };
 })();
 
 const displayController = (() => {
@@ -280,12 +279,12 @@ const displayController = (() => {
     }));
   })();
 
-  const _getMode = (() => {
+  const _changeAIMode = (() => {
     const AIbtns = Array.from(document.querySelectorAll('.AI'));
     AIbtns.forEach(btn => btn.addEventListener('click', function (e) {
       this.classList.toggle('active');
-      const playerNumber = this.getAttribute('data-num');
-      Game.switchMode(playerNumber);
+      const playerIndex = this.getAttribute('data-num');
+      Game.switchAIMode(playerIndex);
     }));
   })();
   return { modifyGivenCell, restart };
